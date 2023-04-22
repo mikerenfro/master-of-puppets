@@ -345,10 +345,22 @@ x
 
 ### Git in Visual Studio Code
 
+
+::: {.columns align=top}
+::: {.column width=50%}
+
 - File / Open Folder
 - Find existing folder, or create empty one.
 - View / Source Control
 - Initialize Repository button
+
+:::
+::: {.column width=50%}
+
+![VS Code Initialize Repo button](figures/vscode-initialize-repo.png){width=70%}
+
+:::
+:::
 
 ::: notes
 x
@@ -356,9 +368,20 @@ x
 
 ### Terminal in Visual Studio Code
 
+::: {.columns align=top}
+::: {.column width=30%}
+
 - View / Terminal
 
 Places you at the top-level Git repository folder.
+
+:::
+::: {.column width=70%}
+
+![VS Code terminal window](figures/vscode-terminal.png){width=90%}
+
+:::
+:::
 
 ::: notes
 x
@@ -421,7 +444,7 @@ x
 
 ### Installing a New Vagrant VM with `vagrant up`
 
-- Running [`vagrant up`](https://mike.renf.ro/vagrant-up-ssh-destroy-rocky.html) from the Visual Studio Code terminal builds the VM.
+- Running [`vagrant up`](http://10.234.24.254/casts/vagrant-up-ssh-destroy-generic-cast.html) from the Visual Studio Code terminal builds the VM.
 - Running `vagrant ssh` from the Visual Studio Code terminal results in you being logged into a `vagrant` account in the Linux VM, which has passwordless `sudo` rights.
 - If you exit back out to your host command prompt, you can do a `vagrant destroy` to shut down and delete the VM.
 

@@ -472,15 +472,24 @@ x
 
 ### Setting Up Version Control (Adding and Committing Useful Files)
 
+:::{.columns align=bottom}
+:::{.column width=70%}
+
 - Notice the Source Control badge now reads `2` (one for `Vagrantfile`, one for `.gitignore`).
-- Right-click `Vagrantfile`, select "Stage Changes" (or hit `+` sign to right of `Vagrantfile`).
-- Repeat for `.gitignore`.
+- Select both `Vagrantfile` and `.gitignore`, select "Stage Changes".
 - In the "Message" text entry, enter `Define initial Vagrantfile and .gitignore` and select the "Commit" button.
 
 In theory, [Git commits should be "atomic"](https://www.aleksandrhovhannisyan.com/blog/atomic-git-commits/), *i.e.*, a single, complete unit of work that can be described in a single sentence.
 In practice, we're often not that disciplined about it.
 
 [Git commit messages should be short and imperative](https://cbea.ms/git-commit/), completing the sentence, "when applied, this commit will ...".
+
+:::
+:::{.column width=30%}
+
+![Readying first Git commit](figures/first-commit.png)
+:::
+:::
 
 ::: notes
 x

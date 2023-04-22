@@ -647,6 +647,7 @@ x
 ### Use Existing Puppet Modules Where Feasible
 
 [https://forge.puppet.com/](https://forge.puppet.com/) has 1200+ modules
+
 - some written and supported by PuppetLabs
 - some supported by Puppet user community (aka the Vox Pupuli)
 - some by individual users or companies

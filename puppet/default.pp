@@ -7,7 +7,7 @@ node 'dnsweb.theits23.renf.ro' {
   class { 'nginx':
   }
   nginx::resource::server { 'dnsweb.theits23.renf.ro':
-    ensure => present,
+    ensure      => present,
     server_name => [
       '10.234.24.254',
     ],

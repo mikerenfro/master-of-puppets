@@ -1,0 +1,17 @@
+digraph reference_architecture{
+    node [colorscheme=paired12, fontname="Arial"];
+     user [label="Puppet-Using\nSystems Administrator"] // uses default black/white oval
+    edge [colorscheme=paired12, fontname="Arial"];
+
+    node [style=filled, shape=rect];
+    node [fontcolor=white]; // even-colored nodes need white text
+
+
+    node [color=4];
+    gitea [label="Gitea server"];
+    
+    node [color=10, fontname="Consolas"];
+    git_push [label="git push"];
+
+    user -> git_push -> gitea -> gitea_webhook -> webhook_service -> r10k_deploy -> deployed_environment;
+}

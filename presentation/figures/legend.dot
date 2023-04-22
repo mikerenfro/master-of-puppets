@@ -1,0 +1,26 @@
+digraph legend {
+    rankdir="LR";
+    node [colorscheme=paired12, fontname="Arial"];
+    edge [colorscheme=paired12, fontname="Arial", style=invis];
+    node [style=filled, shape=rect];
+    subgraph cluster_user_programs {
+        style=invis;
+        user [shape=oval, label="Person", fillcolor=white];
+        terminal [label="OS Programs\noutside VirtualBox", color=10, fontcolor=white];
+        { rank="same"; terminal -> user};
+    }
+    subgraph cluster_vb_vagrant {
+        style=invis;
+        vb [label="VirtualBox-related", color=2, fontcolor=white];
+        vagrant [label="Vagrant-related", color=1, fontcolor=black];
+        { rank="same"; vb -> vagrant };
+    }
+    subgraph cluster_networks {
+        style=invis;
+        external [label="External Networks", color=6, fontcolor=white];
+        internal [label="Internal Networks", color=3, fontcolor=black];
+        { rank="same"; external -> internal };
+    }
+    user -> vagrant -> internal;
+
+}

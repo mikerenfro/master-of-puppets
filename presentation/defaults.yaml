@@ -1,0 +1,9 @@
+from: markdown+tex_math_double_backslash+simple_tables+table_captions+fenced_code_attributes+backtick_code_blocks
+to: beamer
+indented-code-classes:
+  - apache
+  - bash
+  - ruby
+highlight-style: code-highlight.theme
+slide-level: 3
+template: template.beamer

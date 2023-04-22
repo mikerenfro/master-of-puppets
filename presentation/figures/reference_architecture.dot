@@ -1,0 +1,101 @@
+digraph reference_architecture{
+    user [label="Puppet-Using\nSystems Administrator"] // uses default black/white oval
+    node [colorscheme=paired12, fontname="Arial"];
+    edge [colorscheme=paired12, fontname="Arial", dir=both];
+
+    node [style=filled, shape=rect];
+    node [fontcolor=white]; // even-colored nodes need white text
+
+    node [color=2] // for VirtualBox
+    vb [label="VirtualBox Manager\n(headless)"];
+    shared_folder [label="Shared Folder"];
+
+    // node [color=6] // for External Networks
+    // internet [label="Internet"];
+    // host_os_network_external [label="Host OS Networking\n(external-facing)"];
+
+    node [color=10]; // for other Host OS programs
+    terminal [label="Host OS\nTerminal"];
+    vscode [label="VS Code"];
+    git [label="Host OS\nGit"];
+    ssh_other [label="Host OS\nSecure Shell"];
+    any_client [label="Host OS\nAny IP Client"];
+    gui_file_manager [label="Host OS\nFile Manager"];
+    git_repo [label="Local Git\nRepository\n(or clone)"];
+
+    subgraph cluster_vagrant {
+        margin=8;
+        node [color=1, fontcolor=black, fontname="Consolas"]; // for Vagrant-related
+        vagrant [label="vagrant [init|up|down|destroy] [vm]"];
+        vagrant_ssh [label="vagrant ssh [vm]"];
+    }
+
+    subgraph cluster_complexity {
+        margin=8;
+        node [color=10]; // for other Host OS programs
+        ssh [label="Host OS\nSecure Shell"];
+        subgraph cluster_vms {
+            margin=8;
+            style=invis;
+            subgraph cluster_git_vm {
+                git_vm [label="Git Server VM", color=2, fontcolor=white];
+                nat_network_git [label="NAT Network 1\n(with port forwarding)", color=3, fontcolor=black];
+                // { git_vm -> nat_network_git };
+            }
+            subgraph cluster_puppet_vm {
+                puppet_vm [label="Puppet Server VM", color=2, fontcolor=white];
+                nat_network_puppet [label="NAT Network 2\n(with port forwarding)", color=3, fontcolor=black];
+                // { puppet_vm -> nat_network_puppet };
+            }
+            subgraph cluster_web_vm {
+                web_vm [label="Puppet Client,\nWeb Server VM", color=2, fontcolor=white];
+                nat_network_web [label="NAT Network 3\n(with port forwarding)", color=3, fontcolor=black];
+                // { web_vm -> nat_network_web };
+            }
+            git_vm -> puppet_vm -> web_vm [style=invis];
+            nat_network_git -> nat_network_puppet -> nat_network_web [style=invis];
+        }
+        node [fontcolor=black]; // odd-colored nodes need white text
+        // for Internal Networks
+        node [color=3]
+        host_only_network [label="Host-Only Network"];
+        // VirtualBox internal management
+        edge [color=2];
+        vb -> {git_vm puppet_vm web_vm nat_network_git nat_network_puppet nat_network_web shared_folder host_only_network};
+        shared_folder -> { git_vm puppet_vm web_vm};
+    }
+
+    node [fontcolor=black]; // odd-colored nodes need white text
+    // for Internal Networks
+    node [color=3]
+    host_os_network_internal [label="Host OS Networking\n(internal-facing)"];
+
+    // Direct user interactions
+    user -> { gui_file_manager vscode any_client};
+
+    // Vagrant-related
+    edge [color=1];
+    vagrant -> vb;
+    vagrant_ssh -> ssh;
+
+    // Other host OS program interactions
+    edge [color=10];
+    vscode -> {git gui_file_manager terminal};
+    git -> git_repo-> shared_folder;
+    git -> ssh_other;
+    terminal -> { vagrant vagrant_ssh};
+    gui_file_manager -> git_repo;
+    { ssh } -> { nat_network_git nat_network_puppet nat_network_web};
+    { ssh_other any_client } -> { host_os_network_internal };
+
+    // Internal network traffic
+    edge [color=3];
+    nat_network_git -> git_vm;
+    nat_network_puppet -> puppet_vm;
+    nat_network_web -> web_vm;
+    { git_vm puppet_vm web_vm } -> host_only_network -> host_os_network_internal;
+
+    // External network traffic
+    // edge [color=6]
+    // {nat_network_git nat_network_puppet nat_network_web} -> host_os_network_external -> internet;
+}

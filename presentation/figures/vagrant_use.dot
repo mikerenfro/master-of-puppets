@@ -1,0 +1,71 @@
+digraph vagrant_use{
+    // rankdir="LR"
+    nodesep=0.4;
+    user [label="Developer,\nAdministrator, etc."] // uses default black/white oval
+    node [colorscheme=paired12, fontname="Arial"];
+    edge [colorscheme=paired12, fontname="Arial", dir=both];
+
+    node [style=filled, shape=rect];
+    node [fontcolor=white]; // even-colored nodes need white text
+
+    subgraph cluster_vb {
+        style=invis;
+        node [color=2] // for VirtualBox
+        vb [label="VirtualBox Manager\n(headless)"];
+        vm [label="Virtual Machine"];
+        shared_folder [label="Shared Folder"];
+        { rank=same vb -> shared_folder -> vm [style=invis]};
+    }
+
+    subgraph cluster_networks {
+        style=invis;
+        node [color=6] // for External Networks
+        host_os_network_external [label="Host OS Networking\n(external-facing)"];
+        internet [label="Internet"];
+        node [color=3,fontcolor=black]; // Internal network traffic
+        nat_network [label="NAT Network\n(with port forwarding)"];
+        { rank=same nat_network -> host_os_network_external -> internet [style=invis]};
+    }
+    subgraph cluster_vagrant {
+        margin=8;
+        node [color=1, fontcolor=black, fontname="Consolas"]; // for Vagrant-related
+        vagrant [label="vagrant [init|up|down|destroy] [vm]"];
+        vagrant_ssh [label="vagrant ssh [vm]"];
+    }
+
+    node [color=10]; // for other Host OS programs
+    web_browser [label="Host OS\nWeb Browser"];
+    terminal [label="Host OS\nTerminal"];
+    ssh [label="Host OS\nSecure Shell"];
+    gui_file_manager [label="Host OS\nFile Manager"]
+
+    node [fontcolor=black]; // odd-colored nodes need white text
+
+    // Direct user interactions
+    user -> { terminal gui_file_manager web_browser }
+
+    // Other host OS program interactions
+    edge [color=10];
+    terminal -> { vagrant vagrant_ssh};
+    { ssh web_browser } -> nat_network;
+    gui_file_manager -> shared_folder;
+
+    // Vagrant-related
+    edge [color=1];
+    vagrant -> vb;
+    vagrant_ssh -> ssh;
+
+    // VirtualBox internal management
+    edge [color=2];
+    vb -> {vm nat_network shared_folder};
+    shared_folder -> vm;
+
+    // External network traffic
+    edge [color=6]
+    nat_network -> host_os_network_external -> internet;
+
+    // Internal network traffic
+    edge [color=3];
+    vm -> nat_network;
+
+}

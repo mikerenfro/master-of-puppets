@@ -1,0 +1,44 @@
+digraph vm_zoom_in{
+    // terminal [shape=rect, label="Host OS\nTerminal", style=filled];
+    ssh [shape=rect, label="Host OS\nSecure Shell", style=filled];
+    git_client [shape=rect, label="Host OS\nGit Client", style=filled, fontcolor=white, color="#56B4E9"];
+    web_browser [shape=rect, label="Host OS\nWeb Browser", style=filled, fontcolor=white, color="#e69f00"];
+    vagrant_ssh [shape=rect, label="'vagrant ssh' command", style=filled, fontcolor=white, color="#009E73"];
+    vs_code [shape=rect, label="Host OS\nVS Code", style=filled, fontcolor=white, color="#56B4E9"]
+    repo_folder [shape=rect, label="Host OS Git\nRepository Folder", style=filled, fontcolor=white, color="#56B4E9"]
+    // vagrant [shape=rect, label="Vagrant", style=filled];
+    // vb [shape=rect, label="VirtualBox Manager\n(Headless)"];
+    host_only_network [shape=rect, label="Host-Only Network"];
+    nat_network1 [shape=rect, label="NAT Network 1"];
+    nat_network2 [shape=rect, label="NAT Network 2"];
+    nat_network3 [shape=rect, label="NAT Network 3"];
+    // host_os_network_internal [shape=rect, label="Host OS Networking\n(Internal-facing)"];
+    // host_os_network_external [shape=rect, label="Host OS Networking\n(External-facing)"];
+    // internal_network [shape=rect, label="Internal Network"];
+    port_forwarding [shape=rect, label="Port Forwarding"];
+    shared_folder [shape=rect, label="Shared Folder"];
+    vm1 [shape=rect, label="Git Server VM"];
+    vm2 [shape=rect, label="Puppet Server VM"];
+    vm3 [shape=rect, label="Puppet Client,\nWeb Server VM"];
+    // console [shape=rect, label="Virtual Machine Console", style=filled];
+    internet [shape=rect, label="Internet"];
+    gui_file_manager [shape=rect, label="Host OS\nFile Manager", style=filled]
+    // terminal -> vagrant -> vb;
+    // terminal -> { host_only_network port_forwarding vb};
+    // vb -> {host_only_network internal_network nat_network port_forwarding vm shared_folder};
+    // vb -> {vm1 vm2 nat_network1 nat_network2 host_only_network port_forwarding shared_folder} [dir=both];
+    // terminal -> vagrant -> vb [dir=both];
+    gui_file_manager -> shared_folder -> { vm1 vm2 vm3} [dir=both];
+    { web_browser } -> host_only_network -> {vm1 vm3} [dir=both, color="#e69f00"];
+    vs_code -> git_client -> ssh -> {  host_only_network} -> {vm1 } [dir=both, color="#56B4E9"];
+    vs_code -> repo_folder -> git_client [dir=both, color="#56B4E9"];
+    vagrant_ssh -> ssh -> { port_forwarding } -> {nat_network1 nat_network2 nat_network3} [dir=both, color="#009E73"];
+    nat_network1 -> vm1 [dir=both, color="#009E73"];
+    nat_network2 -> vm2 [dir=both, color="#009E73"];
+    nat_network3 -> vm3 [dir=both, color="#009E73"];
+    vm2 -> host_only_network [dir=both];
+    // host_os_network -> {host_only_network port_forwarding} [dir=both];
+    // vm1 -> nat_network1;
+    // vm2 -> nat_network2;
+    {nat_network1 nat_network2 nat_network3} -> internet [dir=both];
+}

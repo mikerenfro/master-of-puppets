@@ -1,0 +1,65 @@
+digraph virtualbox_less_typical_use{
+    rankdir="LR"
+    nodesep=0.4;
+    user [label="Developer,\nAdministrator, etc."] // uses default black/white oval
+    other_user [label="Other User"]
+    node [colorscheme=paired12, fontname="Arial"];
+    edge [colorscheme=paired12, fontname="Arial", dir=both];
+
+    node [style=filled, shape=rect];
+    node [fontcolor=white]; // even-colored nodes need white text
+
+    subgraph cluster_vb {
+        style=invis;
+        node [color=2] // for VirtualBox
+        vb [label="VirtualBox\nManager GUI"];
+        shared_folder [label="Shared Folder"];
+        vm [label="Virtual Machine"];
+        console [label="Virtual Machine\nConsole"];
+    }
+    subgraph cluster_bridged_nat {
+        graph [style=invis];
+        // label = "External networking options";
+        bridged_network [label="Bridged Network", color=6];
+        // node [style=invis, label="or"];
+        nat_network [label="NAT Network\n(with port-forwarding)", color=3, fontcolor=black];
+        // bridged_network -> nat_network [style=invis];
+    }
+    subgraph cluster_external_networks {
+        graph [style=invis];
+        node [color=6] // for External Networks
+        internet [label="Internet"];
+        host_os_network_external [label="Host OS Networking\n(external-facing)"];
+        { rank=same; internet -> host_os_network_external [style=invis]};
+    }
+
+    node [color=10]; // for other Host OS programs
+    ssh [label="Host OS\nSecure Shell"];
+    web_browser [label="Host OS\nWeb Browser"];
+    gui_file_manager [label="Host OS\nFile Manager"]
+    other_ssh [label="Other User's\nSecure Shell"];
+    other_web_browser [label="Other User's\nWeb Browser"];
+
+    // Direct user interactions
+    user -> {gui_file_manager vb console ssh web_browser};
+    other_user -> {other_ssh other_web_browser};
+    // VirtualBox internal management
+    edge [color=2];
+    vb -> {bridged_network nat_network} [style=dashed];
+    vb -> {vm shared_folder};
+    shared_folder -> vm;
+    console -> vm;
+
+    // Other host OS program interactions
+    edge [color=10];
+    gui_file_manager -> shared_folder;
+    { ssh web_browser other_ssh other_web_browser } -> {host_os_network_external};
+    // Internal network traffic
+    edge [color=3];
+    vm -> nat_network [style=dashed];
+    // External network traffic
+    edge [color=6]
+    host_os_network_external -> internet;
+    host_os_network_external -> {bridged_network nat_network} [style=dashed];
+    vm -> bridged_network [style=dashed];
+}

@@ -1,0 +1,53 @@
+digraph data_flows {
+    rankdir="LR"
+    node [colorscheme=paired12, fontname="Arial"];
+    edge [colorscheme=paired12, fontname="Arial"];
+
+    node [style=filled, shape=rect];
+    node [fontcolor=white]; // even-colored nodes need white text
+
+    subgraph cluster_os_progs {
+        style=invis;
+        node [color=10]; // for other Host OS programs
+        git [label="Host OS\nGit"];
+        ssh_git [label="Host OS\nSecure Shell"];
+        web_browser [label="Host OS\nWeb Browser"];
+    }
+    node [color=10]; // for other Host OS programs
+    ssh_vagrant [label="Host OS\nSecure Shell"];
+
+    subgraph cluster_vms {
+        style=invis;
+        node [color=2]; // VirtualBox VMs
+        git_vm [label="Git Server VM", color=2];
+        web_vm [label="Puppet Client,\nWeb Server VM"];
+        puppet_vm [label="Puppet Server VM"];
+        // { rank="same"; git_vm -> puppet_vm -> web_vm [style=invis]};
+    }
+
+    // node [color=6] // for External Networks
+    // internet [label="Internet"];
+
+    node [fontcolor=black];
+    node [color=3];
+    nat_router [label="VB NAT Router\n(with port forwarding)"];
+    node [color=1];
+    vagrant_ssh [label="vagrant ssh [vm]", fontname="Consolas"];
+    
+    edge [color=10]; // for other Host OS programs
+    vagrant_ssh -> ssh_vagrant;
+    ssh_vagrant -> nat_router [label=":(high numbers)"]
+    git -> ssh_git;
+
+    edge [color=3]; // internal networks
+    ssh_git -> git_vm [label=":22"];
+    web_browser -> git_vm [label=":3000"];
+    web_browser -> web_vm [label=":80"];
+    web_vm -> puppet_vm [label=":8140"];
+    git_vm -> puppet_vm [label=":9000"];
+    puppet_vm -> git_vm [label=":22"];
+    nat_router -> { web_vm git_vm puppet_vm } [headlabel=":22"];
+    
+    // edge [color=6] // for External Networks
+    // { puppet_vm git_vm web_vm } -> internet;
+}

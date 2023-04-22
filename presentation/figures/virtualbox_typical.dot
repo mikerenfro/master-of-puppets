@@ -1,0 +1,57 @@
+digraph virtualbox_typical_use{
+    rankdir="LR"
+    nodesep=0.4;
+    user [label="User"] // uses default black/white oval
+    node [colorscheme=paired12, fontname="Arial"];
+    edge [colorscheme=paired12, fontname="Arial" dir=both];
+
+    node [style=filled, shape=rect];
+    node [fontcolor=white]; // even-colored nodes need white text
+
+    subgraph cluster_virtualbox {
+        graph [style=invis];
+        node [color=2] // for VirtualBox
+        # edge [style=invis];
+        vb [label="VirtualBox\nManager GUI"];
+        shared_folder [label="Shared Folder"];
+        vm [label="Virtual Machine"];
+        empty [shape=point, style=invis];
+        empty4 [shape=point, style=invis];
+        console [label="Virtual Machine\nConsole"];
+        { rank=same; vm -> empty4 -> shared_folder -> empty -> console [style=invis]};
+    }
+    subgraph cluster_networks {
+        graph [style=invis];
+        node [color=3]; // for Internal Networks
+        nat_network [label="NAT Network"];
+        node [color=6] // for External Networks
+        # edge [style=invis];
+        host_os_network_external [label="Host OS Networking\n(external-facing)"];
+        // empty2 [shape=point, style=invis];
+        // empty3 [shape=point, style=invis];
+        internet [shape=rect, label="Internet"];
+        { rank=same; nat_network -> host_os_network_external -> internet [style=invis]};
+    }
+
+    node [color=10]; // for other Host OS programs
+    gui_file_manager [shape=rect, label="Host OS\nFile Manager", style=filled]
+
+    node [fontcolor=black]; // odd-colored nodes need white text
+
+
+    // Direct user interactions
+    user -> {gui_file_manager vb console};
+    // VirtualBox internal management
+    edge [color=2];
+    vb -> {vm nat_network shared_folder};
+    vm -> {shared_folder console};
+    // Other host OS program interactions
+    edge [color=10];
+    gui_file_manager -> shared_folder;
+    // Internal network traffic
+    edge [color=3];
+    vm -> nat_network;
+    // External network traffic
+    edge [color=6];
+    nat_network -> host_os_network_external -> internet [splines=line];
+}

@@ -1,0 +1,47 @@
+digraph github_flow{
+    rankdir="TB"
+    nodesep=0.4;
+    node [colorscheme=paired12, fontname="Arial"];
+    edge [colorscheme=paired12, fontname="Arial"];
+
+    node [style=filled, shape=rect];
+    node [fontcolor=black];
+
+    node [color=11];
+    original_production_state [label="Original production state"];
+    merged_into_production [label="Merge changes into production, delete branch"];
+    new_production_state [label="New production state"];
+    node [color=9];
+
+    create_branch_for_new_environment [label="Create Git branch for new changes"]
+    r10k_makes_new_environment [label="webhook and r10k make new environment from branch"];
+    subgraph environment_cycle {
+        rank=same;
+        make_changes_in_new_environment [label="Make changes to new environment"];
+        merge_new_changes_from_production [label="Merge new changes from production environment"];
+    }
+    test_changes_in_new_environment [label="Test changes in new environment"];
+    subgraph pe_cycle {
+        rank=same;
+        discuss_pull_request
+    }
+    make_pull_request [label="Make/update pull request"];
+    discuss_pull_request [label="Discuss pull request"];
+    webhook_r10k_delete_environment [label="webhook and r10k delete environment"];
+    subgraph merge_delete {
+        rank=same;
+        merged_into_production webhook_r10k_delete_environment
+    }
+
+    original_production_state -> create_branch_for_new_environment -> r10k_makes_new_environment;
+    original_production_state -> merged_into_production;
+    r10k_makes_new_environment -> make_changes_in_new_environment;
+    make_changes_in_new_environment -> test_changes_in_new_environment -> merge_new_changes_from_production;
+    merge_new_changes_from_production -> make_changes_in_new_environment;
+    make_changes_in_new_environment -> make_pull_request;
+    make_pull_request -> discuss_pull_request;
+    discuss_pull_request -> make_changes_in_new_environment;
+    discuss_pull_request -> merged_into_production;
+    merged_into_production -> webhook_r10k_delete_environment;
+    merged_into_production -> new_production_state;
+}

@@ -593,7 +593,8 @@ There's two main things we want to have this provisioning script do:
 
 ### Build Git Server, Verify Puppet Exists, Then Commit Changes
 
-- [`vagrant up git`](https://mike.renf.ro/vagrant-up-ssh-git-before-puppet.html) to build
+[At the host terminal](https://mike.renf.ro/vagrant-up-ssh-git-before-puppet.html):
+- `vagrant up git` to build
 - `vagrant ssh git` to log in
 - `sudo -i puppet --version` to see Puppet is installed
 - `exit` to log out
@@ -742,7 +743,7 @@ x
 
 ### Bootstrapping Git Server Configuration in Puppet (5/5)
 
-- At host terminal, run [`vagrant provision git --provision-with puppet`](https://mike.renf.ro/vagrant-provision-git-with-puppet.html)
+- [At host terminal](https://mike.renf.ro/vagrant-provision-git-with-puppet.html), run `vagrant provision git --provision-with puppet`
 - If this fails due to the Vagrantfile having changed while the VM was running, run `vagrant reload`.
 - Watch Puppet download, install, and configure Gitea.
 - At host terminal, re-run `vagrant provision git --provision-with puppet`
@@ -902,9 +903,9 @@ in the `Vagrantfile` as well.
 x
 :::
 
-### Bootstrapping Puppet Server Configuration in Puppet (11/11)
+### Bootstrapping Puppet Server Configuration in Puppet (6/6)
 
-- At host terminal, run [`vagrant up puppet`](https://mike.renf.ro/vagrant-up-puppet.html)
+- [At host terminal](https://mike.renf.ro/vagrant-up-puppet.html), run `vagrant up puppet`
 - Puppet server will get installed in one run (OS, shell provisioner, puppet provisioner).
 - At host terminal, re-run `vagrant provision puppet --provision-with puppet`
 - Watch Puppet determine no further changes need to be made.
@@ -1191,14 +1192,17 @@ x
 
 ### Provisioning a New Web Server in Puppet (9/10)
 
-- Log into the web server and edit the Puppet agent settings with [`vagrant ssh web -c "sudo vi /etc/puppetlabs/puppet/puppet.conf"`](https://mike.renf.ro/vagrant-ssh-web-sudo-vi-puppet-conf-new-environment.html) to add lines
+(Tip: you can use `vagrant ssh host -c "sudo -i command"` to run a privileged command on a VM and automatically log out.)
+
+[At the host terminal](https://mike.renf.ro/vagrant-ssh-web-sudo-vi-puppet-conf-new-environment.html) ([and](https://mike.renf.ro/vagrant-ssh-web-correct-hiera-name.html)):
+- Edit the web server's `/etc/puppetlabs/puppet/puppet.conf` to add lines
   ```
   [agent]
   environment=new_webserver
   ```
-- Generate a certificate signing request (CSR) for the Puppet agent on the new web server with `vagrant ssh web -c "sudo -i puppet agent -t"` and log out.
-- Sign the CSR on the Puppet primary server with `vagrant ssh puppet -c "sudo -i puppetserver ca sign --certname web.theits23.renf.ro"`
-- Apply changes to the web server through the Puppet agent with [`vagrant ssh web -c "sudo -i puppet agent -t"`](https://mike.renf.ro/vagrant-ssh-web-correct-hiera-name.html)
+- Generate a certificate signing request (CSR) for the Puppet agent on the new web server with `puppet agent -t`.
+- Sign the CSR on the Puppet primary server with `puppetserver ca sign --certname web.theits23.renf.ro`
+- Apply changes to the web server through the Puppet agent with `puppet agent -t`
 
 ::: notes
 x
@@ -1212,7 +1216,7 @@ Once we're happy with the changes to the web server, we can merge them into prod
 
 - [Make a new pull request](http://10.234.24.2:3000/theits23/puppet-control/compare/production...new_webserver) from the `new_webserver` into `production`
 - Merge the pull request and delete the `new_webserver` branch
-- Edit the web VM's puppet.conf with [`vagrant ssh web -c "sudo vi /etc/puppetlabs/puppet/puppet.conf"`](https://mike.renf.ro/vagrant-ssh-web-sudo-vi-puppet-conf-remove-environment.html) and remove the `environment=new_webserver` line.
+- Edit the web VM's `/etc/puppetlabs/puppet/puppet.conf` and remove the `environment=new_webserver` line.
 
 ::: notes
 x

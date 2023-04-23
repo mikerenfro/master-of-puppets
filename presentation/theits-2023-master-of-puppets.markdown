@@ -747,6 +747,7 @@ x
 
 - [At host terminal](https://mike.renf.ro/vagrant-provision-git-with-puppet.html), run `vagrant provision git --provision-with puppet`
 - If this fails due to the Vagrantfile having changed while the VM was running, run `vagrant reload`.
+- If this fails due to the a missing Gitea module, run `vagrant provision git --provision-with shell`.
 - Watch Puppet download, install, and configure Gitea.
 - At host terminal, re-run `vagrant provision git --provision-with puppet`
 - Watch Puppet determine no further changes need to be made.

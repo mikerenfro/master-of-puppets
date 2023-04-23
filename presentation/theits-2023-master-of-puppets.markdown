@@ -458,7 +458,7 @@ x
 
 - View / Source Control
 
-Notice there are several other files in the repository folder now (the Source Control button probably has a badge of `3` now). These are from the `.vagrant` folder that Vagrant uses to track virtual machine information.
+Notice there are other files in the repository folder now (the Source Control button probably has a badge of `3` now). These are from the `.vagrant` folder that Vagrant uses to track virtual machine information.
 
 - Right-click one of the files, select "Add to .gitignore"
 - Notice the file is absent from the Source Control button, and there's a new file `.gitignore`.
@@ -555,7 +555,7 @@ x
 Vagrant.configure("2") do |config|
   # general settings for all VMs
   config.vm.box = "bento/rockylinux-8"
-  config.vm.provision "shell", path: "provision.sh"
+  config.vm.provision "shell", path: "shell/provision.sh"
   # settings specific to the git VM
   config.vm.define "git" do |git|
     git.vm.hostname = "git"
@@ -569,13 +569,13 @@ end
 x
 :::
 
-### Contents of `provision.sh`
+### Contents of `shell/provision.sh`
 
 ```bash
 #!/bin/bash
 # Ensure working local DNS
 nmcli con modify 'eth0' ipv4.dns-search 'theits23.renf.ro' \
-  ipv4.ignore-auto-dns yes ipv4.dns '10.234.24.254'
+  ipv4.ignore-auto-dns no ipv4.dns '10.234.24.254'
 systemctl restart NetworkManager
 YUM="yum -q -y"
 # Install puppet
@@ -584,7 +584,10 @@ ${YUM} install puppet-agent
 ```
 
 ::: notes
-x
+There's two main things we want to have this provisioning script do:
+
+1. Use a local DNS server so that the Git server can contact the webhook on the Puppet server by name, and the Puppet server can pull changes from the Git server by name.
+2. Install the Puppet agent for all other configuration.
 :::
 
 ### Build Git Server, Verify Puppet Exists, Then Commit Changes
@@ -599,20 +602,6 @@ In VS Code:
 - View / Source Control
 - add `Vagrantfile` and `provision.sh` to the staged changes
 - commit changes with message `Define initial Git server and install puppet agent`
-
-::: notes
-x
-:::
-
-### Adding a Second Provisioner
-
-- Vagrant allows for multiple provisioning blocks in the Vagrantfile.
-- Now that the Puppet agent is installed in the VM, we can use it to install and configure other items.
-- Add a line below the shell provisioner in the Vagrantfile containing:
-
-```
-  config.vm.provision "puppet" # defaults to manifests/default.pp
-```
 
 ::: notes
 x
@@ -646,194 +635,111 @@ x
 
 ### Use Existing Puppet Modules Where Feasible
 
-[https://forge.puppet.com/](https://forge.puppet.com/) has 1200+ modules
+[https://forge.puppet.com/](https://forge.puppet.com/) has 1200+ modules for Puppet 7:
 
 - some written and supported by PuppetLabs
 - some supported by Puppet user community (aka the Vox Pupuli)
 - some by individual users or companies
 
-### Bootstrapping Git Server Configuration in Puppet (1/10)
+::: notes
+x
+:::
 
-In VS Code:
+### Bootstrapping Git Server Configuration in Puppet (1/5)
 
-- View / Explorer
-- Right-click empty area, make a new folder `manifests`
-- Right-click `manifests` folder, create new file `default.pp`.
+\begin{center}
+The choices to install/configure Gitea
+\end{center}
 
-In `manifests/default.pp`, add:
+::: {.columns}
+::: {.column width=50%}
+#### Map install guide to low-level resources
+- make users
+- install packages
+- download, extract archives
+- create folders, set permissions
+- create services
+- edit config files, restart services
+:::
+::: {.column width=50%}
+#### Use Puppet forge module
+- work within documented APIs
+- figure out when default settings aren't appropriate
+- figure out if there's a documented API to adjust those settings
+- manage module dependencies
+:::
+:::
+
+Either way, in VS Code, make a new file `puppet/default.pp` and add:
 
 ```ruby
 node 'git.theits23.renf.ro' {
-  $fast_network = false # set true to load resources from Internet
-  # yum -q -y install git sqlite
-  package { [ 'git', 'sqlite', ]:
-    ensure => present,
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (2/10)
-
-```ruby
-  user { 'git': # adduser --system --create-home git
-    ensure     => present,
-    system     => true,
-    managehome => true,
-  }
-  ['', 'custom', 'data', 'log'].each |$dir| {
-    file { "/var/lib/gitea/${dir}":
-      ensure  => directory,
-      owner   => 'git',
-      group   => 'git',
-      mode    => '0750',
-      require => User['git'],
-    } # install -d -o git -g git -m 0750 /var/lib/gitea/{custom,data,log}
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (3/10)
-
-```ruby
-  file { '/etc/gitea': # install -d -o root -g git -m 0770 /etc/gitea
-    ensure  => directory,
-    owner   => 'root',
-    group   => 'git',
-    mode    => '0770',
-    require => User['git'],
-  }
-  $ver = '1.18.5'
-  $giteaurl = "https://dl.gitea.com/gitea/${ver}"
-  $serviceurl = "https://raw.githubusercontent.com/go-gitea/gitea"
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (4/10)
-
-```ruby
-  $giteasource = $fast_network ? {
-    true    => "${giteaurl}/gitea-${ver}-linux-amd64",
-    default => "/vagrant/gitea/gitea-${ver}-linux-amd64",
-  }
-  file { '/usr/local/bin/gitea':
-    ensure         => present,
-    owner          => 'root',
-    group          => 'root',
-    mode           => '0755',
-    source         => $giteasource,
-    checksum       => 'sha1',
-    checksum_value => 'a33afcfe0d3ba27667f49c99e5dfa91202fce4b3',
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (5/10)
-
-```ruby
-  $servicesource = $fast_network ? {
-    true    => "${serviceurl}/v${ver}/contrib/systemd/gitea.service",
-    default => '/vagrant/gitea/gitea.service',
-  }
-  file { '/etc/systemd/system/gitea.service':
-    ensure         => present,
-    owner          => 'root',
-    group          => 'root',
-    mode           => '0644',
-    source         => $servicesource,
-    checksum       => 'sha1',
-    checksum_value => 'ff8d03c9a5805e471d4ea01e279b23ef92c277d5',
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (6/10)
-
-```ruby
-  service { 'gitea': # systemctl start gitea ; systemctl enable gitea
-    ensure  => running,
-    enable  => true,
-    require => [
-      File['/etc/systemd/system/gitea.service'],
-      File['/usr/local/bin/gitea'],
-    ],
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (7/10)
-
-```ruby
-  $localnet = '10.234.24.0/24'
-  exec { 'allow webhooks to local network':
-    command  => "echo -e \ # wrapped for slide, should be one line
-    '[webhook]\nALLOWED_HOST_LIST = ${localnet}' >> /etc/gitea/app.ini",
-    provider => 'shell',
-    onlyif   => 'test \ # wrapped for slide, should be one line
-    $(grep -q ALLOWED_HOST_LIST /etc/gitea/app.ini; echo $?) -eq 1',
-    notify   => Service['gitea'],
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (8/10)
-
-```ruby
-  exec { 'fix root URL for Gitea':
-    command  => "perl -pi.bak \ # wrapped for slide, should be one line
-    -e 's#localhost:3000#10.234.24.2:3000#g' /etc/gitea/app.ini",
-    provider => 'shell',
-    onlyif   => 'test \ # wrapped for slide, should be one line
-    $(grep -q 10.234.24.2:3000 /etc/gitea/app.ini; echo $?) -eq 1',
-    notify   => Service['gitea'],
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Git Server Configuration in Puppet (9/10)
-
-```ruby
-  exec { 'fix domain, ssh domain for Gitea':
-    command  => "perl -pi.bak \ # wrapped for slide, should be one line
-     -e 's#= localhost#= 10.234.24.2#g' /etc/gitea/app.ini",
-    provider => 'shell',
-    onlyif   => 'test \ # wrapped for slide, should be one line
-    $(grep -q "= 10.234.24.2" /etc/gitea/app.ini;echo $?) -eq 1',
-    notify   => Service['gitea'],
-  }
 }
 ```
 
-*Note:* all of the preceding code is geared for bootstrapping and demonstrating fundamental resource types. Normally we use much higher-level abstractions for configuration where possible.
+::: notes
+x
+:::
+
+### Bootstrapping Git Server Configuration in Puppet (2/5)
+Going for [the Puppet Forge version](https://forge.puppet.com/modules/h0tw1r3/gitea/)---inside the `node` entry, add:
+```ruby
+  $ip = $::facts['networking']['interfaces']['eth1']['ip']
+  $net = $::facts['networking']['interfaces']['eth1']['network']
+  class { 'gitea':
+    ensure   => '1.18.5',
+    checksum =>
+      '4766ad9310bd39d50676f8199563292ae0bab3a1922b461ece0feb4611e867f2',
+    custom_configuration => {
+      'server'  => { 'ROOT_URL' => "http://${ip}:3000/",
+        'SSH_DOMAIN' => $ip, 'DOMAIN' => $ip, },
+      'webhook' => { 'ALLOWED_HOST_LIST' => "${net}/24", }
+    },
+  }
+```
 
 ::: notes
 x
 :::
 
-### Bootstrapping Git Server Configuration in Puppet (10/10)
+### Where Do We Get The Gitea Class? (3/5)
+
+- Once the Puppet agent is installed in a VM, we have access to the `puppet module` command to install Forge modules.
+- Those are shell commands, so they're `shell` provisioner lines in the Vagrantfile.
+- To reduce the copy/paste, we can write a Ruby function in `ruby/install_mod.rb` to generate shell commands to install modules.
+
+```ruby
+# "Installing a puppet module from a manifest script",
+# https://stackoverflow.com/a/25009495
+def install_mod(name, version, install_dir = nil)
+    install_dir ||= '/etc/puppetlabs/code/modules'
+    "mkdir -p #{install_dir} && " \
+    "(puppet module list | grep #{name}) || " \
+    "puppet module install -v #{version} #{name}"
+end
+```
+
+::: notes
+x
+:::
+
+### Where Do We Get The Gitea Class? (4/5)
+
+Add a line to the top of the `Vagrantfile`:
+```ruby
+require './ruby/install_mod'
+```
+Add two lines under the Git network settings line to install the Gitea module and run the Puppet provisioner:
+```ruby
+git.vm.provision "shell", inline: install_mod('h0tw1r3-gitea', '2.0.0')
+git.vm.provision "puppet", manifests_path: "puppet"
+```
+
+::: notes
+x
+:::
+
+### Bootstrapping Git Server Configuration in Puppet (5/5)
 
 - At host terminal, run [`vagrant provision git --provision-with puppet`](https://mike.renf.ro/vagrant-provision-git-with-puppet.html)
 - If this fails due to the Vagrantfile having changed while the VM was running, run `vagrant reload`.
@@ -848,15 +754,12 @@ x
 
 ### Final Configuration of Gitea Through the Web
 
-- Head to [http://10.234.24.2:3000/](http://10.234.24.2:3000/) in the host browser for initial setup of Gitea.
-  - Database Type: SQLite3
-  - Gitea Base URL: http://10.234.24.2:3000/
+- Head to [http://10.234.24.2:3000/](http://10.234.24.2:3000/) in the host browser to create an administrator account in Gitea.
   - Administrator Username: gitadmin
-  - Password: (anything)
+  - Password: (anything at least 6 characters)
   - Email Address: (anything)
 - On the host, generate an ssh key with `ssh-keygen -t ed25519`, then `cat ~/.ssh/id_ed25519.pub` (if you already have an ssh public key, you can cat it instead).
 - Copy/paste the public key content into [http://10.234.24.2:3000/user/settings/keys](http://10.234.24.2:3000/user/settings/keys).
-- At the host terminal, re-run [`vagrant provision git --provision-with puppet`](https://mike.renf.ro/vagrant-provision-git-with-puppet-second.html) to finalize the last Gitea settings from Puppet.
 
 ::: notes
 x
@@ -902,205 +805,97 @@ Repeat the same procedure to make a new Vagrant VM for Puppet. Realistically, a 
 x
 :::
 
-### Bootstrapping Puppet Server Configuration in Puppet (1/11)
+### Bootstrapping Puppet Server Configuration in Puppet (1/N)
 
-In `manifests/default.pp`, add:
+Before we go tearing into more configuration files with the first thing that could possibly work, let's consider what we need the Puppet primary server to do:
+
+1. Run a `puppetserver` service where other systems can pull their settings from
+2. Pull those settings from a repository in Gitea
+3. Run a `webhook` service so the Git server can notify that new settings are available
+4. Deploy code from a Git repository using `r10k`
+
+So if we stick with the Puppet Forge architecture, we'll need to find modules to handle each of those.
+
+::: notes
+x
+:::
+
+### Finding Puppet Modules for The Puppet Server (2/N)
+
+- Don't search Puppet Forge for "puppet".
+- "puppetserver" works a bit better, and includes a recent module from [The Foreman](https://theforeman.org) lifecycle management project.
+
+Add
+```ruby
+puppet.vm.provision "shell", \
+  inline: install_dep('theforeman-puppet', '16.5.0')
+```
+below the Puppet server's network line in the `Vagrantfile`.
+
+::: notes
+x
+:::
+
+### Finding Puppet Modules for The Puppet Server (3/N)
+
+Git might be easy to manage, as simple as a
+
+```puppet
+package { 'git': ensure => present, }
+```
+
+but **automated** Git operations will require a bit more:
+
+1. We want a private repository, so we'll need authentication.
+2. Normally, that means `ssh`, which means managing identities and host public keys on the `git` client side, plus authorized public keys on the `git` server side.
+
+Looking for ssh-related modules, we find we can add:
 
 ```ruby
-node 'puppet.theits23.renf.ro' {
-  package { 'puppetserver':
-    ensure => present,
-  }
-  service { 'puppetserver':
-    ensure  => running,
-    enable  => true,
-    require => Package['puppetserver'],
-  }
-  package { 'git':
-    ensure => present,
-  }
+puppet.vm.provision "shell", \
+  inline: install_dep('puppet-ssh_keygen', '5.0.2')
+puppet.vm.provision "shell", \
+  inline: install_dep('puppetlabs-sshkeys_core', '2.4.0')
+```
+
+to the `Vagrantfile`.
+
+::: notes
+x
+:::
+
+### Finding Puppet Modules for The Puppet Server (4/N)
+
+How about `r10k`? Looks hopeful, as there's a Puppet Community maintained module:
+
+```ruby
+puppet.vm.provision "shell", \
+  inline: install_dep('puppet-r10k', '10.3.0')
+```
+
+Not so much with `webhook`, though. Only thing relevant has dependency conflicts with Puppet 7.
+So time to work out a way to install `webhook` from its GitHub tarball:
+```ruby
+puppet.vm.provision "shell", \
+  inline: install_dep('puppet-archive', '6.1.2')
 ```
 
 ::: notes
 x
 :::
 
-### Bootstrapping Puppet Server Configuration in Puppet (2/11)
+### Bootstrapping Puppet Server Configuration in Puppet (5/N)
+
+Even with the Forge modules, still wound up with several slides of code. So go see it here.
+
+Spoiler alert, we ended up needing to resolve a permissions issue between the Foreman's Puppet module and running `r10k` as an unprivileged `puppet` user. So we ended up needing
 
 ```ruby
-  # Webhook to trigger r10k
-  $tarball = '/vagrant/webhook/webhook-linux-amd64.tar.gz'
-  exec { 'extract webhook':
-    command => "/bin/tar --strip-components=1 -zxf ${tarball}",
-    cwd     => '/usr/local/bin',
-    creates => '/usr/local/bin/webhook'
-  }
-  file { '/usr/local/bin/webhook':
-    ensure  => present,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0755',
-    require => Exec['extract webhook'],
-  }
+puppet.vm.provision "shell", \
+  inline: install_dep('npwalker-recursive_file_permissions', '0.6.2')
 ```
 
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (3/11)
-
-```ruby
-  file { '/etc/webhook.yaml':
-    ensure => present,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0644',
-    source => '/vagrant/webhook/webhook.yaml',
-  }
-  file { '/etc/systemd/system/webhook.service':
-    ensure => present,
-    owner  => 'root',
-    group  => 'root',
-    mode   => '0644',
-    source => '/vagrant/webhook/webhook.service',
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (4/11)
-
-```ruby
-  service { 'webhook':
-    ensure  => running,
-    enable  => true,
-    require => [
-      File['/etc/systemd/system/webhook.service'],
-      File['/etc/webhook.yaml'],
-      File['/usr/local/bin/webhook'],
-    ],
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (5/11)
-
-```ruby
-  # r10k and dependencies
-  package { 'r10k':
-    ensure   => 'present',
-    provider => 'puppetserver_gem',
-  }
-  ['r10k', 'r10k-deploy-ref'].each |$f| {
-    file { "/usr/local/bin/${f}":
-      ensure => present,
-      source => "/vagrant/webhook/${f}",
-      owner  => 'root',
-      group  => 'puppet',
-      mode   => '0750',
-    }
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (6/11)
-
-```ruby
-  file { '/etc/puppetlabs/r10k':
-    ensure => directory,
-    owner  => 'root',
-    group  => 'puppet',
-    mode   => '0750',
-  }
-  file { '/etc/puppetlabs/r10k/r10k.yaml':
-    source => '/vagrant/webhook/r10k.yaml',
-    owner  => 'root',
-    group  => 'puppet',
-    mode   => '0640',
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (7/11)
-
-```ruby
-  # Prepare ssh keys for r10k git operations
-  $puppet_home = '/opt/puppetlabs/server/data/puppetserver'
-  file { "${puppet_home}/.ssh":
-    ensure  => directory,
-    owner   => 'puppet',
-    group   => 'puppet',
-    mode    => '0700',
-    require => Package['puppetserver'],
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (8/11)
-
-```ruby
-  $algo = 'ed25519'
-  $keyfile = "${puppet_home}/.ssh/id_${algo}"
-  $makekey = "ssh-keygen -t ${algo} -f ${keyfile}"
-  exec { 'create puppet ssh deploy key':
-    command  => "${makekey} -q -N ''",
-    provider => 'shell',
-    user     => 'puppet',
-    creates  => ${keyfile},
-    require  => File["${puppet_home}/.ssh"],
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (9/11)
-
-```ruby
-  -> exec { 'import git ssh host key':
-    command  => "ssh-keyscan -t ecdsa git.theits23.renf.ro,10.234.24.2 \
-    # wrapped for slide, should be one line
-    > ${puppet_home}/.ssh/known_hosts",
-    provider => 'shell',
-    user     => 'puppet',
-    creates  => "${puppet_home}/.ssh/known_hosts",
-  }
-```
-
-::: notes
-x
-:::
-
-### Bootstrapping Puppet Server Configuration in Puppet (10/11)
-
-```ruby
-  # Prepare initial clone directories for r10k
-  file { [
-    '/etc/puppetlabs/code/environments',
-    '/etc/puppetlabs/code/environments/production'
-    ]:
-    ensure => directory,
-    owner  => 'puppet',
-    group  => 'puppet',
-    mode   => '0750',
-  }
-```
+in the `Vagrantfile` as well.
 
 ::: notes
 x
@@ -1209,22 +1004,10 @@ else
   # "How to split a string in shell and get the last field"
   # -- https://stackoverflow.com/a/9125818
   REF="$1"; BRANCH=$(echo "${REF}" | rev | cut -d/ -f1 | rev)
-  /usr/local/bin/r10k deploy environment "${BRANCH}" -p
+  r10k deploy environment "${BRANCH}" --modules --incremental
   /opt/puppetlabs/bin/puppet generate types --environment "${BRANCH}" \
     --codedir /etc/puppetlabs/code
 fi
-```
-
-::: notes
-x
-:::
-
-### /usr/local/bin/r10k
-
-```bash
-#!/bin/bash
-/opt/puppetlabs/bin/puppetserver ruby \
-  /opt/puppetlabs/server/data/puppetserver/jruby-gems/bin/r10k $@
 ```
 
 ::: notes
@@ -1332,10 +1115,10 @@ x
 In the `puppet-control` `manifests/site.pp`, replace the `node default` entry with:
 ```ruby
 node default {
-  $classes = lookup('classes', Variant[String])
-  case $classes {
-    String[1]: { include $classes }
-    default: { fail('This node did not receive any classification') }
+  $role = lookup('role', Variant[String])
+  case $role {
+    String[1]: { include "role::${role}" }
+    default: { fail('This node has no defined role.') }
   }
 }
 ```
@@ -1366,7 +1149,7 @@ x
 
 ### Provisioning a New Web Server in Puppet (6/10)
 
-Edit the file `site-modules/role/manifests/webserver.pp` in the `puppet-control` repository. Add the following lines to it below `include profile::base`:
+Edit the file `site-modules/role/manifests/webserver.pp` in the `puppet-control` repository. Add the following line to it below `include profile::base`:
 
 ```ruby
 include profile::apache
@@ -1396,7 +1179,7 @@ Make a new file `data/nodes/web.theits23.renf.ro.yaml` in the `puppet-control` r
 
 ```yaml
 ---
-classes: role::webserver
+role: webserver
 ```
 
 Save, add, and commit this change with a message like `make 'web' a web server`. Then push all the commits to the remote Git repository with the Sync Changes button.
@@ -1489,7 +1272,7 @@ x
 - Running Puppet agent as a service
 - Encrypted data in Hiera
 - Options for separating Hiera data by OS, OS family, domain, etc.
-- Encterprise Node Classifiers to centrally control which nodes get which environment
+- External node classifiers to centrally control which nodes get which environment
 - Deeper dive into "facts" gathered by each node that inform the compiled catalog
 - Distributing files and templates from Puppet
 - Adding parameters to profile classes (usually populated from Hiera)
@@ -1506,7 +1289,7 @@ All presentation content edited with Visual Studio Code, tracked with Git, and h
 
 Terminal output captured with [asciinema](https://asciinema.org) on Unix or [PowerSession](https://github.com/Watfaq/PowerSession-rs) on Windows.
 
-Slides created in [Pandoc](https://pandoc.org)'s Markdown format, converted to PDF with Pandoc, [\TeX{} Live](https://www.tug.org/texlive/) and [\LaTeX{} Beamer](https://ctan.org/pkg/beamer). Slide theme: [Cookeville](https://github.com/mikerenfro/beamerthemeCookeville), presented with [Skim](https://skim-app.sourceforge.io).
+Slides created in [Pandoc](https://pandoc.org)'s Markdown format, converted to PDF with Pandoc, [\TeX{} Live](https://www.tug.org/texlive/), and [\LaTeX{} Beamer](https://ctan.org/pkg/beamer). Slide theme: [Cookeville](https://github.com/mikerenfro/beamerthemeCookeville), presented with [Skim](https://skim-app.sourceforge.io).
 
 Graphs created in [DOT](https://www.graphviz.org/doc/info/lang.html) format with [Brewer](https://en.wikipedia.org/wiki/Cynthia_Brewer) [paired12](https://graphviz.org/doc/info/colors.html#brewer) color scheme, converted with [Graphviz](https://www.graphviz.org/) to PDF.
 

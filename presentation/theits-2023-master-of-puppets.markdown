@@ -594,7 +594,7 @@ There's two main things we want to have this provisioning script do:
 
 ### Build Git Server, Verify Puppet Exists, Then Commit Changes
 
-[At the host terminal](https://mike.renf.ro/vagrant-up-ssh-git-before-puppet.html):
+[At the host terminal](http://10.234.24.254/casts/vagrant-up-git-shell-only-cast.html):
 
 - `vagrant up git` to build
 - `vagrant ssh git` to log in
@@ -745,7 +745,7 @@ x
 
 ### Bootstrapping Git Server Configuration in Puppet (5/5)
 
-- [At host terminal](https://mike.renf.ro/vagrant-provision-git-with-puppet.html), run `vagrant provision git --provision-with puppet`
+- [At host terminal](http://10.234.24.254/casts/vagrant-provision-git-cast.html), run `vagrant provision git --provision-with puppet`
 - If this fails due to the Vagrantfile having changed while the VM was running, run `vagrant reload`.
 - If this fails due to the a missing Gitea module, run `vagrant provision git --provision-with shell`.
 - Watch Puppet download, install, and configure Gitea.
@@ -908,7 +908,7 @@ x
 
 ### Bootstrapping Puppet Server Configuration in Puppet (6/6)
 
-- [At host terminal](https://mike.renf.ro/vagrant-up-puppet.html), run `vagrant up puppet`
+- [At host terminal](http://10.234.24.254/casts/vagrant-up-puppet-provision-puppet-cast.html), run `vagrant up puppet`
 - Puppet server will get installed in one run (OS, shell provisioner, puppet provisioner).
 - At host terminal, re-run `vagrant provision puppet --provision-with puppet`
 - Watch Puppet determine no further changes need to be made.
@@ -1084,7 +1084,7 @@ x
 
 ### Provisioning a New Web Server in Puppet (2/10)
 
-In VS Code window for the `iac-project` repository:
+[In VS Code window for the `iac-project` repository](http://10.234.24.254/casts/vagrant-up-web-empty-puppet-warning-cast.html):
 
 - Run `vagrant up web` and verify the web server VM is created and prints the warning message about getting configured from the Puppet server.
 - Add, commit, and push the changes to `Vagrantfile` and `default.pp`.
@@ -1196,7 +1196,7 @@ x
 ### Provisioning a New Web Server in Puppet (9/10)
 
 (Tip: use `vagrant ssh host -c "sudo -i command"` to run a privileged command and log out.)
-[At the host terminal](https://mike.renf.ro/vagrant-ssh-web-sudo-vi-puppet-conf-new-environment.html) ([and](https://mike.renf.ro/vagrant-ssh-web-correct-hiera-name.html)):
+[At the host terminal](http://10.234.24.254/casts/vagrant-ssh-web-puppet-web-cast.html):
 
 - Edit the web server's `/etc/puppetlabs/puppet/puppet.conf` to add lines
 

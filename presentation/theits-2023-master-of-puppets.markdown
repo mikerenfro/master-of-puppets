@@ -445,6 +445,7 @@ x
 ### Installing a New Vagrant VM with `vagrant up`
 
 [From the Visual Studio Code terminal](http://10.234.24.254/casts/vagrant-up-ssh-destroy-generic-cast.html):
+
 - Running `vagrant up` builds the VM.
 - Running `vagrant ssh` results in you being logged into a `vagrant` account in the Linux VM, which has passwordless `sudo` rights.
 - If you exit back out to your host command prompt, you can do a `vagrant destroy` to shut down and delete the VM.
@@ -594,6 +595,7 @@ There's two main things we want to have this provisioning script do:
 ### Build Git Server, Verify Puppet Exists, Then Commit Changes
 
 [At the host terminal](https://mike.renf.ro/vagrant-up-ssh-git-before-puppet.html):
+
 - `vagrant up git` to build
 - `vagrant ssh git` to log in
 - `sudo -i puppet --version` to see Puppet is installed
@@ -1192,15 +1194,17 @@ x
 
 ### Provisioning a New Web Server in Puppet (9/10)
 
-(Tip: you can use `vagrant ssh host -c "sudo -i command"` to run a privileged command on a VM and automatically log out.)
-
+(Tip: use `vagrant ssh host -c "sudo -i command"` to run a privileged command and log out.)
 [At the host terminal](https://mike.renf.ro/vagrant-ssh-web-sudo-vi-puppet-conf-new-environment.html) ([and](https://mike.renf.ro/vagrant-ssh-web-correct-hiera-name.html)):
+
 - Edit the web server's `/etc/puppetlabs/puppet/puppet.conf` to add lines
+
   ```
   [agent]
   environment=new_webserver
   ```
-- Generate a certificate signing request (CSR) for the Puppet agent on the new web server with `puppet agent -t`.
+
+- Generate a certificate signing request (CSR) for the Puppet agent on the new web server with `puppet agent -t`
 - Sign the CSR on the Puppet primary server with `puppetserver ca sign --certname web.theits23.renf.ro`
 - Apply changes to the web server through the Puppet agent with `puppet agent -t`
 

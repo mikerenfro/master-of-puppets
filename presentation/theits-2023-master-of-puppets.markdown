@@ -444,8 +444,9 @@ x
 
 ### Installing a New Vagrant VM with `vagrant up`
 
-- Running [`vagrant up`](http://10.234.24.254/casts/vagrant-up-ssh-destroy-generic-cast.html) from the Visual Studio Code terminal builds the VM.
-- Running `vagrant ssh` from the Visual Studio Code terminal results in you being logged into a `vagrant` account in the Linux VM, which has passwordless `sudo` rights.
+[From the Visual Studio Code terminal](http://10.234.24.254/casts/vagrant-up-ssh-destroy-generic-cast.html):
+- Running `vagrant up` builds the VM.
+- Running `vagrant ssh` results in you being logged into a `vagrant` account in the Linux VM, which has passwordless `sudo` rights.
 - If you exit back out to your host command prompt, you can do a `vagrant destroy` to shut down and delete the VM.
 
 Once that's working, we'd like to record the new Vagrantfile into version control in Visual Studio Code, but there are complications.

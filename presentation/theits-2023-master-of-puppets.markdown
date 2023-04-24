@@ -23,7 +23,13 @@ urlcolor: blue
 4. Local, sandboxed development environments may be preferred to reduce iteration time and risk to production systems.
 
 ::: notes
-x
+So the main reason I'm interested in this sort of topic is that we're being asked to manage and integrate more services without a corresponding increase in headcount.
+
+Lots of the old manual methods can be error-prone and don't scale.
+
+We sometimes make gold images or VM templates to capture a known good state, but we can't necessarily reproduce that artifact.
+
+I'd also like to accelerate new service development in a way that reduces exposure to production systems.
 :::
 
 ### The Tradeoffs
@@ -45,7 +51,15 @@ x
 :::
 
 ::: notes
-x
+
+And here are the things we're constantly balancing in IT automation.
+
+On the left, there's a clean simple equation comparing how much time you'll save in the future if you automate something now,
+
+but the reality is that it's hard to know when to stop development,
+
+and it's hard to predict if your new thing (whether automated or manual) is going to be holding up the entire infrastructure for decades or if it'll be abandoned within a year.
+
 :::
 
 ## What Do You Want to Do About It?
@@ -75,7 +89,19 @@ x
 :::
 
 ::: notes
-x
+
+But if we're going to take the time to automate, let's set out some goals for what success looks like.
+
+I'd like a single source of authority on system configuration related to a service.
+
+I want to reduce configuration drift, but not keep burning CPU time doing work that's already been done.
+
+I want to know who changed what when, and why.
+
+I want to reduce the number of big binary artifacts I carry around.
+
+And I want to be able to let developers test and break things without risking production services.
+
 :::
 
 ### Stretch Goals for a Viable IaC Solution
@@ -99,7 +125,19 @@ x
 :::
 
 ::: notes
-x
+
+If I can, I want to have multiple areas of development and testing going on at once.
+
+I want people to develop on their choice of platform.
+
+I'd like to manage multiple operating systems, both endpoints and servers.
+
+I'd like to securely store, track, and distribute secrets.
+
+I want to be a good neighbor on existing systems. If all I want to do is deploy the new antivirus and nothing else, I should be able to.
+
+And I want to avoid vendor lock-in. Vendors are great, but business models change, companies get bought, and I'd like to reduce my exposure to those.
+
 :::
 
 ### This Isn't the Only Possible Solution
@@ -110,7 +148,11 @@ x
 - Replace any of them with other tools matching your local preferences and standards (the concepts are unchanged).
 
 ::: notes
-x
+
+Fundamentally, what I'm covering here are *concepts* of infrastructure as code with a reference implementation using cross-platform open source tools.
+
+But if you've got a strong preference or established practices for a competing product, stick with it if you like.
+
 :::
 
 ## For the Admin Laptop/Desktop
@@ -125,7 +167,11 @@ x
   - Extension Pack is not open source, and use requires separate license from Oracle.
 
 ::: notes
-x
+
+So on the administrator or developer's client system, they'll need a hypervisor.
+
+I'm showing Oracle's VirtualBox without the Extension Pack to reduce licensing barriers.
+
 :::
 
 ### VirtualBox Typical Use for Client Testing
@@ -142,7 +188,11 @@ Easy, and works fine for testing new OSes or applications.
 :::
 
 ::: notes
-x
+
+So basically everyone here has probably used a desktop hypervisor for testing new operating systems, or setting up a sandbox environment.
+
+For VM quantity 1 and a goal of "get to the Internet", this isn't a big deal in VirtualBox.
+
 :::
 
 ### VirtualBox Less Typical Use for Server Testing
@@ -160,7 +210,11 @@ Easy? Maybe, but management effort scales with number of virtual machines, and t
 :::
 
 ::: notes
-x
+
+Sometimes we use the same hypervisor to set up servers.
+
+Here things get a bit trickier, as you need to manually configure and install multiple VMs, configure multiple port forwardings or bridged network connections, and it doesn't scale well.
+
 :::
 
 ### Provisioning (2/2)
@@ -173,7 +227,13 @@ x
 - Supports in-VM provisioning via file copy, shell script, Ansible, CFEngine, Chef, Docker, Podman, Puppet, and Salt.
 
 ::: notes
-x
+
+So in concert with your hypervisor, I'm adding in HashiCorp's Vagrant.
+
+Vagrant will let you programmatically create, configure, and delete VMs and networks.
+
+And rather than just using OS installation media, they make it easy to run provisioning scripts in several languages.
+
 :::
 
 ### What's Vagrant Doing?
@@ -187,7 +247,11 @@ A Vagrant VM is just a VirtualBox VM that:
 - supports ssh from the host operating system through an automatically-forwarded port (via `vagrant ssh`)
 
 ::: notes
-x
+
+Keep in mind that anything you can do in Vagrant, you can do in VirtualBox if you put in enough effort.
+
+But a Vagrant VM fits a lot of what I want in service development in that it puts the VMs in the background, lets me pick from my choice of operating systems, lets me exchange files through a shared folder, and lets me ssh from my host into the VM easily.
+
 :::
 
 ### What's the Difference with Vagrant for a Single Virtual Machine?
@@ -202,7 +266,9 @@ x
 :::
 
 ::: notes
-x
+
+The Vagrant architecture on a single VM isn't too different from the manual VirtualBox one, except that our person now only has to interact with a terminal, their file manager, and the `vagrant` commands. All the VirtualBox complexity is hidden behind Vagrant.
+
 :::
 
 ### How Does It Scale to Multiple Virtual Machines?
@@ -217,7 +283,9 @@ x
 :::
 
 ::: notes
-x
+
+The advantages get more apparent when you add in multiple VMs. The person still only has three primary tools to work with, and managing extra VMs is a matter of adding extra lines in a Vagrantfile.
+
 :::
 
 ### What If My Programs Can't Use Alternate Ports?
@@ -232,7 +300,11 @@ x
 :::
 
 ::: notes
-x
+
+Another thing Vagrant makes easier is more complex network configurations. Maybe you've got a client on your host OS that doesn't let you change port numbers, or you really need to see something running on port 80 or 443 for reproducibility.
+
+Because you can set up a host-only network where each VM is a first-class citizen with its own IP, all of that is feasible.
+
 :::
 
 ### Toolchains
@@ -248,7 +320,15 @@ x
 : Helper tools for developing and testing Puppet modules and classes.
 
 ::: notes
-x
+
+Other things we'll need to install on the administrator's client system are:
+
+Git for verstion control
+
+Puppet Agent, mostly for managing secrets, so you can definitely stop and disable its background service.
+
+The Puppet Development Kit that makes it easier to create modules and classes with correct documentation and testing.
+
 :::
 
 ### Editing
@@ -262,7 +342,9 @@ x
 : Provides syntax highlighting, code completion, and linting of Puppet code. Integrates with Puppet Development Kit.
 
 ::: notes
-x
+
+For editing, I do a lot of Visual Studio Code, especially because there's a Puppet extension that will do syntax highlighting, code completion, and linting.
+
 :::
 
 ## In the Vagrant VMs (and Production Servers)
@@ -279,7 +361,17 @@ x
   - Run the agent on the Puppet primary server to have it define its own configuration.
 
 ::: notes
-x
+
+Inside the VMs that we'll build with Vagrant and host in VirtualBox, we'll need the Puppet agent on everything, and the Puppet server programs on the designated Puppet server.
+
+If you've never seen it before, Puppet code is declarative rather than procedural. Similar to Desired State Configuration in Windows, it describes a configuration rather than a particular sequence of steps to realize that configuration.
+
+When Puppet agents check in, they send over a bunch of attributes including IP addresses, operating system versions, and other "facts" about themselves.
+
+The Puppet primary server integrates those facts into a compiled catalog of resources that the agent system should have.
+
+And the agent will then order those resources as needed to realize that configuration.
+
 :::
 
 ### Version Control Server
@@ -296,7 +388,15 @@ x
   - webhooks to trigger automation on various events.
 
 ::: notes
-x
+
+Gitea is a Git server that's incredibly easy to deploy.
+
+It's a single Go binary that doesn't require an external database server
+
+and has a lot of the features I've grown to expect with GitHub and other services.
+
+In particular, we're going to make use of its ability to trigger automation on other systems through a webhook request.
+
 :::
 
 ### Continuous Deployment
@@ -312,7 +412,15 @@ x
 Combining Git branches, Gitea webhooks, adnanh's Webhook, and r10k allows easy management of multiple Puppet environments for developing and testing services.
 
 ::: notes
-x
+
+So we need something to react to Gitea's webhook request, and that's another single-Go-binary program cleverly called `webhook`.
+
+It lets you run arbitrary commands when a request is made to the webhook, and can host several hooks on one system.
+
+What do we want to run from the webhook? It'll be the `r10k` program that lets us map branches in Git to isolated environments in Puppet.
+
+That way, we can assign pilot systems to an alternative environment and test/break things there without risking production at every step.
+
 :::
 
 # Steps Toward Infrastructure as Code
@@ -324,7 +432,7 @@ x
 Use default settings for all.
 
 ::: notes
-x
+So for installation of the needed tools on the host system, you can just take the default values for anything in VS Code, VirtualBox, Vagrant, and Puppet.
 :::
 
 ### Git
@@ -340,7 +448,9 @@ x
   should be enough to get started.
 
 ::: notes
-x
+For Git, I've linked to Software Carpentry's instructions for installation, since there's a few places we'd like to deviate from the defaults.
+
+And we'd like to configure names, email addresses, and end-of-line handling between Windows and non-Windows systems.
 :::
 
 ### Git in Visual Studio Code
@@ -363,7 +473,11 @@ x
 :::
 
 ::: notes
-x
+The first main thing we want to get going in VS Code is version control with Git.
+
+If you use the File / Open Folder menu and either open an existing or new folder, then
+
+in the View / Source Control menu (or the branch-looking icon on the left), there'll be an Initialize Repository button you can use to turn that folder into a local Git repository.
 :::
 
 ### Terminal in Visual Studio Code
@@ -384,7 +498,10 @@ Places you at the top-level Git repository folder.
 :::
 
 ::: notes
-x
+The other main thing we want to set up in VS Code is the terminal.
+
+You can get to it with the View / Terminal menu, or by pressing Control and backquote (and even on a Mac, it's the Control key and not the Command key).
+
 :::
 
 ## In the Vagrant Development Environment
@@ -397,12 +514,18 @@ We want a VM:
 - running a Red Hat-family OS, version 8
 - supporting a shared folder `/vagrant` mapped from the host OS
 
+You can find lots of starting points at [https://app.vagrantup.com/](https://app.vagrantup.com/).
+
 Start the definition of a new Vagrant VM in the repository folder with `vagrant init bento/rockylinux-8`, and look at the `Vagrantfile` that was just created.
 
 (The `bento` Vagrant boxes are built by the [Chef Bento project](https://github.com/chef/bento).)
 
 ::: notes
-x
+Ok, so if we want to make a VM running something in the Red Hat 8 family, we can search app.vagrantup.com for different options.
+
+I'm going with the Rocky Linux one since it's what I use in our high performance computing environment, and it's an ideological sucessor to what CentOS was in version 7.
+
+So do a `vagrant init bento/rockylinux-8` to get an updated and minimized Rocky VM from the Chef Bento project.
 :::
 
 ### The First Vagrantfile (1/2)
@@ -423,7 +546,13 @@ Vagrant.configure("2") do |config|
 ```
 
 ::: notes
-x
+That `vagrant init` will happen pretty quickly because all it does is make a Ruby-syntax `Vagrantfile` with the VM definition.
+
+So it doesn't download or install anything.
+
+If we look at the `Vagrantfile`, it's got a lot of suggested settings that are commented out.
+
+I'm showing here the ones that matter the most to us: here we've got networking and resource requirements
 :::
 
 ### The First Vagrantfile (2/2)
@@ -439,7 +568,9 @@ end
 You'll also see a `1` badge on the Source Control button in Visual Studio Code, indicating there's one pending change in the repository folder (the creation of the `Vagrantfile`).
 
 ::: notes
-x
+And here we've got provisioning of the VM after the main download has finished.
+
+Here you can see it's just a few lines that don't actually work with a Red Hat family VM, as `vagrant init` isn't doing any kind of validation of the file when it's created.
 :::
 
 ### Installing a New Vagrant VM with `vagrant up`
@@ -453,7 +584,11 @@ x
 Once that's working, we'd like to record the new Vagrantfile into version control in Visual Studio Code, but there are complications.
 
 ::: notes
-x
+Clicking on these links referring to a terminal usually means I've got a link to a screencast showing the commands and output for that step.
+
+So here, from the folder containing the `Vagrantfile`, we can do a `vagrant up` and see the base VM image get downloaded, the port forwarding for secure shell (if you look closely, you can see it works around other VMs that already have port forwards in place), and mounts the shared folder from the host filesystem.
+
+Once the VM is up, we can ssh in with `vagrant ssh`. There's no password required since Vagrant sets up public key authentication for us, and that account has passwordless `sudo` on the VM, which makes it easy to set up applications and other services.
 :::
 
 ### Setting Up Version Control (How to Ignore Machine-Generated Files)
@@ -469,7 +604,11 @@ Notice there are other files in the repository folder now (the Source Control bu
 - Edit the only line in `.gitignore` to be just `.vagrant/` (no filename) and save the file.
 
 ::: notes
-x
+So if you've got a Vagrant VM created or running, there'll be extra files showing up in a `.vagrant` folder in the repository.
+
+We don't want them cluttering up the repository, as they're all machine-generated and can always be recreated.
+
+So we'll right-click one, add it to a `.gitignore` file, and if we edit the `gitignore` to just have the folder name and not a specific file, we can ignore everything from that folder on down.
 :::
 
 ### Setting Up Version Control (Adding and Committing Useful Files)
@@ -494,7 +633,15 @@ In practice, we're often not that disciplined about it.
 :::
 
 ::: notes
-x
+Once you've got the .gitignore saved, the Source Control badge number will drop to a 2, one for the `Vagrantfile`, and one for the `.gitignore`.
+
+You can right-click both of them to add them to the staged changes, and then you can add a commit message and hit the Commit button.
+
+Wherever posisble, you want your commits to be atomic, where the changes represent one functional unit of work, as big or as small as you need.
+
+And your commit messages should be short and imperative, completing a sentence "when applied, this commit will..."
+
+But realistically, we're not super-disciplined about that in practice.
 :::
 
 ### What Would We Like to Change?
@@ -522,7 +669,13 @@ x
 :::
 
 ::: notes
-x
+So we've got the equivalent of a Hello, World in Vagrant, and there's a lot we'll need to change to make a functional environment.
+
+We want to change hostnames; add packages, configuration files, and services; we want to build multiple VMs from the same Vagrantfile, and we'd like to have the VMs poll the Puppet primary server for changes.
+
+Some things we can change directly in the Vagrantfile, others with the available provisioners, some by copying files from the shared folder we showed earlier.
+
+Ideally, we want to factor out everything into separate files and functions, so that we don't have a lot of copy/paste going on.
 :::
 
 ### Reference Architecture
@@ -539,7 +692,13 @@ x
 :::
 
 ::: notes
-x
+So the overall architecture we're heading for will have three VMs managed by Vagrant: a Git server, a Puppet primary server, and a barebones web server that will get its configuration from the Puppet primary server.
+
+They'll communicate amongst themselves over a network they share with the host OS.
+
+That will also let us communicate with the Git server from Visual Studio code or from a host web browser.
+
+Everything inside the rectangular area is abstracted away by Vagrant, so we reduce a lot of the scaling and chances for manual error. 
 :::
 
 ## Minimum Viable IaC Part 1: Bootstrapping a Git Server
@@ -548,7 +707,11 @@ x
 - We'll use the `shell` provisioner to install the Puppet agent in each VM (later, we'll let the `puppet` provisioner to do the rest of the setup in each VM).
 
 ::: notes
-x
+So Vagrant will let us use multiple provisioners.
+
+The shell provisioner will work out of the box on any Unix system,
+
+and if we use that to install the Puppet agent, we can do the rest of the setup inside Puppet.
 :::
 
 ### Initial Vagrantfile for Git server
@@ -568,7 +731,11 @@ end
 ```
 
 ::: notes
-x
+So here's a more minimized Vagrantfile for the Git server.
+
+We can factor out some common settings with the `config` object, like having a common operating system image or a common shell script.
+
+Other things can be customized for each VM, like its hostname and IP.
 :::
 
 ### Contents of `shell/provision.sh`
@@ -608,7 +775,11 @@ In VS Code:
 - commit changes with message `Define initial Git server and install puppet agent`
 
 ::: notes
-x
+So in this screencast, we can see Vagrant build the VM and install Puppet.
+
+If we log into it with vagrant ssh, we can verify the Puppet version,
+
+and afterwards, we can go back into VS Code to add and commit the changes we made to the Vagrantfile and the provision.sh.
 :::
 
 ### Useful Puppet Resource Types (Most Common in **Bold**)
@@ -634,7 +805,19 @@ x
 :::
 
 ::: notes
-x
+So the Puppet provisioner runs the `puppet apply` command, and has full access to all the Puppet features.
+
+The fundamental resources that we can manage in Puppet include:
+
+- running arbitrary commands with exec and cron
+- file content and permissions
+- package installation and removal
+- SELinux settings
+- services
+- local users, groups, and SSH keys, both for hosts and for users
+
+Those resources don't generally change syntax if you change platforms: a package resource installs with apt on Debian-family systems and with yum or dnf on Red Hat-family systems.
+
 :::
 
 ### Use Existing Puppet Modules Where Feasible
@@ -646,7 +829,11 @@ x
 - some by individual users or companies
 
 ::: notes
-x
+On the other end of the abstraction spectrum, we've got over 1200 modules on Puppet Forge compatible with Puppet 7.
+
+These can vary in age and quality, but the most common software stacks are pretty well covered by either PuppetLabs themselves, or by various people in the Puppet user community
+
+It's also possible to keep your own modules in any Git repository, whether private or public.
 :::
 
 ### Bootstrapping Git Server Configuration in Puppet (1/5)
@@ -682,7 +869,13 @@ node 'git.theits23.renf.ro' {
 ```
 
 ::: notes
-x
+So whether it's Gitea or any other service, we can map an installation guide to lower-level resources,
+
+or we can use Puppet modules to abstract away a lot of the implementation details.
+
+And we can mix the two if we need to.
+
+To get started, we'll make a new node entry in the default.pp in the puppet folder with the FQDN of the Git server.
 :::
 
 ### Bootstrapping Git Server Configuration in Puppet (2/5)
@@ -703,7 +896,13 @@ Going for [the Puppet Forge version](https://forge.puppet.com/modules/h0tw1r3/gi
 ```
 
 ::: notes
-x
+So I decided to go for the Puppet Forge version of setting up Gitea, and though I've had to compact the formatting a bit to fit it on one slide, this is all that it takes.
+
+We've got a couple examples of pulling IP and network addresses from the Gitea host to avoid hard-coding things.
+
+In the interest of time, I did have to hard-code the number of netmask bits, but there are modules that can do that conversion.
+
+And this is about an 80% reduction in lines of code from the lower-level version.
 :::
 
 ### Where Do We Get The Gitea Class? (3/5)
@@ -724,7 +923,12 @@ end
 ```
 
 ::: notes
-x
+So how do we get the Gitea module installed from Puppet Forge?
+
+There's a `puppet module install` command that can install modules, but that could get tedious to type repeatedly.
+
+So we can make a Ruby function that returns the shell command to run to install an arbitrary module and version, and we'll pass those strings inline to the shell provisioner.
+
 :::
 
 ### Where Do We Get The Gitea Class? (4/5)
@@ -740,7 +944,11 @@ git.vm.provision "puppet", manifests_path: "puppet"
 ```
 
 ::: notes
-x
+We'll make sure we include the Ruby file with the function in it,
+
+and then we can add a shell provision line for each module we want to install.
+
+As all of those modules have to be installed before the Puppet provisioner runs, we put them in the right order in the Vagrantfile.
 :::
 
 ### Bootstrapping Git Server Configuration in Puppet (5/5)
@@ -754,7 +962,15 @@ x
 - Add and commit the changes to `Vagrantfile` and `default.pp`.
 
 ::: notes
-x
+So in theory, we'd run the Puppet provisioner to finish setting things up.
+
+But if the VM was still running when we changed the Vagrantfile, we'll have to reload the VM with `vagrant reload`.
+
+If we're missing a Puppet module, we'll need to rerun the shell provisioners to install them,
+
+and then we can re-run the Puppet provisioner to use the newly-installed modules.
+
+If we rerun the Puppet provisioner again, it sees that everything is configured as it's supposed to be, and it exits out quickly.
 :::
 
 ### Final Configuration of Gitea Through the Web
@@ -767,7 +983,11 @@ x
 - Copy/paste the public key content into [http://10.234.24.2:3000/user/settings/keys](http://10.234.24.2:3000/user/settings/keys).
 
 ::: notes
-x
+Once the Puppet provisioner is finished, we've got a running Gitea server at the address in the first bullet point.
+
+It's had some initial setup done, and is waiting on an administrator account to get created.
+
+Once we've made the account, we can add an ssh key to it so we can push code to it.
 :::
 
 ### Saving a Copy of the Vagrant repository in Gitea
@@ -787,7 +1007,11 @@ In VS Code window:
 Now every time you make a commit, you'll be able to push that commit to the remote repository.
 
 ::: notes
-x
+Gitea supports separation of accounts and organizations, and you'll normally want to make an organization, add members to it, and let the organization "own" the repository.
+
+So we'll make a theits organization and a repository in the organization to hold the Vagrant content and other files we need to stand up this environment.
+
+Once it's created, we can add a new remote hosted on the Gitea server, and can push to it over ssh.
 :::
 
 ## Minimum Viable IaC Part 2: Bootstrapping a Puppet Primary Server
@@ -807,7 +1031,9 @@ Repeat the same procedure to make a new Vagrant VM for Puppet. Realistically, a 
 ```
 
 ::: notes
-x
+Ok, so we can now set up a second server in Vagrant, and it'll be the Puppet primary server.
+
+It'll need at least 4 GB of RAM, and extra CPU cores are useful. We'll assign it an IP, too.
 :::
 
 ### Bootstrapping Puppet Server Configuration in Puppet (1/N)
@@ -822,7 +1048,17 @@ Before we go tearing into more configuration files with the first thing that cou
 So if we stick with the Puppet Forge architecture, we'll need to find modules to handle each of those.
 
 ::: notes
-x
+Now I didn't show any of the custom provisioning yet, because the Puppet server we want will need to do more than just one thing like the Gitea server does.
+
+We need it to listen for Puppet agent connections from remote systems.
+
+We need it to pull new settings for those systems from the Git server.
+
+We need that pull from Git to be triggered by a webhook on the Git server when it gets a push of new code.
+
+And we want to run some deploy scripts against the code that we pulled.
+
+So if we're going to use Forge modules, we'll need to piece several together to make this work, and see what's left over that we have to set up more manually.
 :::
 
 ### Finding Puppet Modules for The Puppet Server (2/N)
@@ -838,17 +1074,15 @@ puppet.vm.provision "shell", \
 below the Puppet server's network line in the `Vagrantfile`.
 
 ::: notes
-x
+For managing the Puppet primary server's puppet service called `puppetserver`, we can find a recent module from the Foreman project.
+
+So we'll drop that into the provisioning lines.
 :::
 
 ### Finding Puppet Modules for The Puppet Server (3/N)
 
 Git might be easy to manage, as simple as a
-
-```puppet
-package { 'git': ensure => present, }
-```
-
+`package { 'git': ensure => present, }`
 but **automated** Git operations will require a bit more:
 
 1. We want a private repository, so we'll need authentication.
@@ -866,7 +1100,15 @@ puppet.vm.provision "shell", \
 to the `Vagrantfile`.
 
 ::: notes
-x
+So installing the Git binary is pretty simple,
+
+but for automated Git usage, we need to manage two sets of ssh keys:
+
+one user-based public key that can be authorized to repositories on the Git server,
+
+and one host public key for the Git server, so that the Git client on Puppet knows its talking to the correct system.
+
+So we'll add one module to automate user key generation, and another module to manage the known hosts file for ssh connections.
 :::
 
 ### Finding Puppet Modules for The Puppet Server (4/N)
@@ -886,12 +1128,16 @@ puppet.vm.provision "shell", \
 ```
 
 ::: notes
-x
+There's a module to handle setting up `r10k`, as that's pretty popular package for Puppet people.
+
+But surprisingly, there's not a current module for Adnan's webhook, so we'll need to start by downloading and uncompressing a tarball.
+
+We've got the `archive` module for that.
 :::
 
 ### Bootstrapping Puppet Server Configuration in Puppet (5/N)
 
-Even with the Forge modules, still wound up with several slides of code. So go see it here.
+Even with the Forge modules, still wound up with several slides of code. So [go see it here](https://github.com/mikerenfro/master-of-puppets-demo/blob/master/puppet/default.pp).
 
 Spoiler alert, we ended up needing to resolve a permissions issue between the Foreman's Puppet module and running `r10k` as an unprivileged `puppet` user. So we ended up needing
 
@@ -900,10 +1146,12 @@ puppet.vm.provision "shell", \
   inline: install_dep('npwalker-recursive_file_permissions', '0.6.2')
 ```
 
-in the `Vagrantfile` as well.
+in the [`Vagrantfile`](https://github.com/mikerenfro/master-of-puppets-demo/blob/65dce6b11a7c39bb89811c88427f937e51a95a7f/Vagrantfile#L16) as well.
 
 ::: notes
-x
+In the interest of time, I'm not going to go through all the Puppet code required to set up the Puppet primary server.
+
+IT'd require about 4 slides or so, but I can review it later if anyone wants.
 :::
 
 ### Bootstrapping Puppet Server Configuration in Puppet (6/6)
@@ -915,7 +1163,11 @@ x
 - Add and commit the changes to `Vagrantfile` and `default.pp`.
 
 ::: notes
-x
+Like before, we can run a `vagrant up puppet` to build the BM,
+
+and since we've got all the provisioning steps worked out in advance,
+
+then barring any bugs, we end up with a fully functional Puppet server ready for webhook and r10k.
 :::
 
 # Typical Infrastructure as Code Workflows
@@ -938,7 +1190,15 @@ In Gitea web interface:
 - [Create new, uninitialized repository](http://10.234.24.2:3000/repo/create?org=2) `puppet-control` in the `theits23` organization.
 
 ::: notes
-x
+So we need a starting point and some structure for the Puppet code we'll deploy to the webserver we're about to build and manage in Puppet.
+
+If we start a new window in VS Code, we can clone the canonical Puppet control repository from PuppetLabs.
+
+It's got a good bit more sophistication than what we've done with the single default.pp file so far,
+
+and it gives a starting point that can scale to most any system you want to manage.
+
+Once we've got the repository cloned to our local system, we can make a new, unititlized repository called `puppet-control` in the local Gitea server.
 :::
 
 ### Saving a Local (Gitea) Copy of  `puppet-control`
@@ -954,7 +1214,11 @@ In VS Code window with the `puppet-control` repository open:
 - Click the Publish Branch button
 
 ::: notes
-x
+We can use VS Code's Source Control tools to remove the GitHub remote we got the control repository from,
+
+add a new remote for Gitea,
+
+and publish the repository to Gitea.
 :::
 
 ## Webhook Between Gitea and Puppet
@@ -969,7 +1233,15 @@ Gitea can be configured to make a web request when certain events occur on any o
 - The script will run the `r10k` program to check out that branch, pull down prewritten modules from [Puppet Forge](https://forge.puppet.com) or Git repositories, and deploy an entire Puppet environment defining multiple servers.
 
 ::: notes
-x
+Now that we've got the code stored in Gitea, we need to set up a webhook whenever we make a change to the repository.
+
+That way, any time we make a change to the code, Gitea can send a web request to the webhook service on the Puppet server,
+
+include information about what got changed (mostly the branch),
+
+the Puppet server can pull changes from that branch into a separate folder that will make up an isolated environment for the systems we're developing,
+
+and r10k can pull down any Forge modules that we need to make that environment function.
 :::
 
 ### General Data Flows
@@ -979,7 +1251,15 @@ x
 ![](figures/legend.dot.pdf){width=30%}
 
 ::: notes
-x
+This slide shows some more of the internal details and port numbers from the previous slide.
+
+Git pushes changes over ssh to the Git server's port 22,
+
+where Gitea notices the change and makes a web request to Puppet's port 9000,
+
+which runs a deployment script to pull new code from the Git server's port 22 and deploy it.
+
+Later, the web server or any other system running the Puppet agent can pick up on the modified code.
 :::
 
 ### /etc/webhook.yaml
@@ -994,7 +1274,7 @@ x
 ```
 
 ::: notes
-x
+The webhook YAML shows a hook name, the script to run, and the arguments to pass to the script.
 :::
 
 ### /usr/local/bin/r10k-deploy-ref
@@ -1016,7 +1296,9 @@ fi
 ```
 
 ::: notes
-x
+The deployment script can run the `r10k` program that's been configured to know where the control repository is,
+
+pulls code from the updated branch and deploys it.
 :::
 
 ### Gitea configuration
@@ -1025,7 +1307,9 @@ x
 - [Configure an outgoing webhook in the `puppet-control` repository](http://10.234.24.2:3000/theits23/puppet-control/settings/hooks), pointed at `http://puppet.theits23.renf.ro:9000/hooks/r10k`.
 
 ::: notes
-x
+For this to work, we'd need to `cat` the `puppet` account's ssh public key and import it as a deploy key for the repository in Gitea.
+
+And we'd need to configure an outgoing webhook in the repository to contact the Puppet server at the URL shown here.
 :::
 
 ## GitHub Flow for Managing Development/Testing/Bugfix Environments
@@ -1033,7 +1317,19 @@ x
 ![[GitHub Flow](https://docs.github.com/en/get-started/quickstart/github-flow) applied to Puppet development](figures/github_flow.dot.pdf){width=45%}
 
 ::: notes
-x
+Another thing that factors into service development and bug-fixing is how you manage multiple branches of work all happening at once.
+
+GitHub Flow is one of the most common methods of managing this.
+
+Each new line of work starts by branching off the current state of a primary branch (named `production` in the `puppet-control` repository).
+
+Dvery time we push a change up, the webhook will update the Puppet server.
+
+We iterate over making changes, testing those changes, and most importantly, merging any new changes from the production branch on a regular basis.
+
+Once we're satisfied our code solves the problem it needs to, we make and discuss a pull request to merge the branch back into production, make any more changes required, and eventually merge it back in and delete the just-merged branch.
+
+This sets up guard rails to protect production systems from any breaking changes from the other branches, and allows enormous latitude in the changes that can be made in the isolated environments.
 :::
 
 ## Provisioning a New Web Server in Puppet
@@ -1053,7 +1349,20 @@ x
 - Lots of component modules for various software at [Puppet Forge](https://forge.puppet.com).
 
 ::: notes
-x
+Another best practice in Puppet service development is the "roles and profiles" method.
+
+In this, we consider a server to have one and only one role (e.g., "a Banner database server")
+
+That server has several things in common with other servers: it runs an Oracle database, it allows certain groups sudo access, it has particular firewall rules that have to be enabled, etc.
+
+These smaller sets of settings that are common with other servers are called profiles.
+
+We factor out the profiles into their own classes, and include them as part of the server's role.
+
+That way, we can manage common baseline settings across all applicable servers and reduce duplication.
+
+The last sort of module is a component module, like the Gitea one we used earlier. Component modules usually manage a single piece of software, and are included from profile classes.
+
 :::
 
 ### Provisioning a New Web Server in Puppet (1/10)
@@ -1068,26 +1377,20 @@ Modify the `Vagrantfile` to include a web server VM:
   end
 ```
 
-and the Puppet `manifests/default.pp` to include:
-
-```ruby
-node 'web.theits23.renf.ro' {
-  notify { 'web to be configured from puppet server':
-    message => 'Web server to be configured from the Puppet server.',
-  }
-}
-```
+No `puppet/default.pp` lines required at all, as we're not going to provsion anything in Vagrant through Puppet.
 
 ::: notes
-x
+So for the web server, we can make a bare-bones Vagrant entry with just the common shell provisioner enabled.
+
+We don't need the `puppet apply` command to do any setup at all in Vagrant, since we've now got a Puppet server that can define the web server's configuration through the `puppet agent` command.
 :::
 
 ### Provisioning a New Web Server in Puppet (2/10)
 
 [In VS Code window for the `iac-project` repository](http://10.234.24.254/casts/vagrant-up-web-empty-puppet-warning-cast.html):
 
-- Run `vagrant up web` and verify the web server VM is created and prints the warning message about getting configured from the Puppet server.
-- Add, commit, and push the changes to `Vagrantfile` and `default.pp`.
+- Run `vagrant up web` and verify the web server VM is created.
+- Add, commit, and push the changes to `Vagrantfile`.
 
 In VS Code window for `puppet-control` repository:
 
@@ -1097,7 +1400,11 @@ In VS Code window for `puppet-control` repository:
 - Click the Publish Branch button
 
 ::: notes
-x
+We can do a `vagrant up web` to build the VM and run the shell provisioner.
+
+We can add, commit, and push the changes to the Vagrantfile.
+
+And in the `puppet-control` repository, we can make a new branch from production called "new_webserver" and publish that branch to Gitea.
 :::
 
 ### Provisioning a New Web Server in Puppet (3/10)
@@ -1112,7 +1419,11 @@ mod 'puppetlabs-stdlib', '8.5.0'
 exist (all these modules are from [Puppet Forge](https://forge.puppet.com)). Add and commit this change with a message like `set up current module versions`.
 
 ::: notes
-x
+In the new branch, let's make sure we have the right modules to manage Apache on the web server.
+
+Those are the Apache module and its dependencies that are listed in the file called `Puppetfile`.
+
+Then we can add, commit, and push the Puppetfile.
 :::
 
 ### Provisioning a New Web Server in Puppet (4/10)
@@ -1130,7 +1441,11 @@ node default {
 Save, add, and commit this change with a message like `derive node classes from Hiera` --- this is a simpler version of [Updating Puppet classification with hiera to use the modern lookup command](https://rnelson0.com/2019/12/24/updating-puppet-classification-with-hiera-to-use-the-modern-lookup-command/).
 
 ::: notes
-x
+We want to modernize the site-wide manifest in Puppet while serves the same role as the `default.pp` we used in Vagrant.
+
+Instead of making different entries in the file for each node we manage, we use a catch-all default node that looks up a value called `role` and includes a role class corresponding to that role name.
+
+We'll get back around to where the data comes from shortly, for now, let's define the rest of the web server's classes.
 :::
 
 ### Provisioning a New Web Server in Puppet (5/10)
@@ -1149,7 +1464,9 @@ class profile::apache {
 Save, add, and commit this change with a message like `define apache profile`.
 
 ::: notes
-x
+Let's make a new profile class for managing Apache.
+
+On this slide, it just declares the Apache component module, but it could easily apply other settings like setting up partitions, firewall rules, or other settings.
 :::
 
 ### Provisioning a New Web Server in Puppet (6/10)
@@ -1163,7 +1480,9 @@ include profile::apache
 Save, add, and commit this change with a message like `update webserver role to use Apache`.
 
 ::: notes
-x
+There's already a `webserver` role in the default control repository.
+
+So we'll edit that to include our Apache profile class and push up that changes.
 :::
 
 ### Provisioning a New Web Server in Puppet (7/10)
@@ -1175,7 +1494,13 @@ Use Hiera to Separate Data from Code
 - Supports public-key encrypted data (admins encrypt values with shared public key, Puppet decrypts on the fly with private key)
 
 ::: notes
-x
+So then we get to the data.
+
+There's a library called Hiera linked into Puppet that can look up data relevant to a server.
+
+The data can be factored out by hostname, operating system, any other fact provided by the client system, or common data to the whole environment.
+
+It can store data encrypted with a shared public key, too.
 :::
 
 ### Provisioning a New Web Server in Puppet (8/10)
@@ -1190,7 +1515,9 @@ role: webserver
 Save, add, and commit this change with a message like `make 'web' a web server`. Then push all the commits to the remote Git repository with the Sync Changes button.
 
 ::: notes
-x
+By default, the `puppet-control` repository will look in a file stored in the `data/nodes` directory, named for the FQDN of the server.
+
+For now, we'll add one entry for the web server's role, and commit and push that change to the Git server.
 :::
 
 ### Provisioning a New Web Server in Puppet (9/10)
@@ -1210,7 +1537,17 @@ x
 - Apply changes to the web server through the Puppet agent with `puppet agent -t`
 
 ::: notes
-x
+Now it's finally time to build the web server.
+
+Since we need to bounce between the web server and the Puppet server at first,
+
+we can run commands with the `-c` flag to `vagrant ssh`.
+
+So we need to do three things:
+
+1. We need to make sure the web server goes into the new environment we made, so we'll edit its puppet.conf accordingly.
+2. We need to enroll the system in Puppet management by sending a certificate signing request to the Puppet server and sign it.
+3. And we need to apply the webserver's settings from the Puppet server by running the Puppet agent another time.
 :::
 
 ### Provisioning a New Web Server in Puppet (10/10)
@@ -1224,7 +1561,11 @@ Once we're happy with the changes to the web server, we can merge them into prod
 - Edit the web VM's `/etc/puppetlabs/puppet/puppet.conf` and remove the `environment=new_webserver` line.
 
 ::: notes
-x
+And if those changes applied without errors, you've now got a working, but totally minimal, Apache server available at the URL shown here.
+
+If we needed to make any more changes, we'd push more changes to the Git server and apply them with `puppet agent -t`.
+
+Once we're happy with how the web server is configured, we can make a pull request to merge the changes into the production environment 
 :::
 
 # Conclusion
@@ -1257,7 +1598,11 @@ x
 :::
 
 ::: notes
-x
+So did we meet the goals I set out at the beginning?
+
+Pretty much. Puppet covers being the source of authority, making the right changes, and letting us handle differences between environments.
+
+Git handles the recordkeeping, and Vagrant reduces the dependence on binary artifacts and lets us set up airgapped development environments.
 :::
 
 ### Stretch Goals for a Viable IaC Solution
@@ -1273,7 +1618,7 @@ x
 7. Avoid vendor lock-in.
 
 ::: notes
-x
+The stretch goals are all handled by the open source variant of Puppet, even though we didn't get to all of these features.
 :::
 
 ## Things We Didn't Get To
@@ -1290,7 +1635,9 @@ x
 - More Gitea settings (branch protection, centralized authentication, ...)
 
 ::: notes
-x
+So there's a lot of things we didn't get to, mostly in Puppet, but a bit in Gitea, too.
+
+I can dig into any of those people are interested in later.
 :::
 
 ## Software Credits
@@ -1308,5 +1655,9 @@ Questions?
 \end{center}
 
 ::: notes
-x
+In case anybody's interested, here's the list of software used to make this presentation.
+
+It's over-engineered and over-analyzed, but I like them.
+
+Questions?
 :::

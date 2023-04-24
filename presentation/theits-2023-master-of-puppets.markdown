@@ -1047,7 +1047,7 @@ Ok, so we can now set up a second server in Vagrant, and it'll be the Puppet pri
 It'll need at least 4 GB of RAM, and extra CPU cores are useful. We'll assign it an IP, too.
 :::
 
-### Bootstrapping Puppet Server Configuration in Puppet (1/N)
+### Bootstrapping Puppet Server Configuration in Puppet (1/6)
 
 Before we go tearing into more configuration files with the first thing that could possibly work, let's consider what we need the Puppet primary server to do:
 
@@ -1072,7 +1072,7 @@ And we want to run some deploy scripts against the code that we pulled.
 So if we're going to use Forge modules, we'll need to piece several together to make this work, and see what's left over that we have to set up more manually.
 :::
 
-### Finding Puppet Modules for The Puppet Server (2/N)
+### Finding Puppet Modules for The Puppet Server (2/6)
 
 - Don't search Puppet Forge for "puppet".
 - "puppetserver" works a bit better, and includes a recent module from [The Foreman](https://theforeman.org) lifecycle management project.
@@ -1090,7 +1090,7 @@ For managing the Puppet primary server's puppet service called `puppetserver`, w
 So we'll drop that into the provisioning lines.
 :::
 
-### Finding Puppet Modules for The Puppet Server (3/N)
+### Finding Puppet Modules for The Puppet Server (3/6)
 
 Git might be easy to manage, as simple as a
 `package { 'git': ensure => present, }`
@@ -1122,7 +1122,7 @@ and one host public key for the Git server, so that the Git client on Puppet kno
 So we'll add one module to automate user key generation, and another module to manage the known hosts file for ssh connections.
 :::
 
-### Finding Puppet Modules for The Puppet Server (4/N)
+### Finding Puppet Modules for The Puppet Server (4/6)
 
 How about `r10k`? Looks hopeful, as there's a Puppet Community maintained module:
 
@@ -1146,7 +1146,7 @@ But surprisingly, there's not a current module for Adnan's webhook, so we'll nee
 We've got the `archive` module for that.
 :::
 
-### Bootstrapping Puppet Server Configuration in Puppet (5/N)
+### Bootstrapping Puppet Server Configuration in Puppet (5/6)
 
 Even with the Forge modules, still wound up with several slides of code. So [go see it here](https://github.com/mikerenfro/master-of-puppets-demo/blob/master/puppet/default.pp).
 

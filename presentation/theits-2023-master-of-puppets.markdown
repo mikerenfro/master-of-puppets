@@ -17,10 +17,21 @@ urlcolor: blue
 
 ## What's the Problem, and Why Should I Care?
 
+::: {.columns align=top}
+
+::: {.column width=25%}
+![Presentation repository](figures/qrcode-presentation.png)
+:::
+::: {.column width=50%}
 1. The number of services we manage is growing faster than our headcount.
 2. Manual configuration leads to manual errors and doesn't scale.
 3. Some automation artifacts (e.g., golden images or VM templates) may lack reproducibility (often due to uncrecorded manual changes).
 4. Local, sandboxed development environments may be preferred to reduce iteration time and risk to production systems.
+:::
+::: {.column width=25%}
+![Demo repository](figures/qrcode-demo.png)
+:::
+:::
 
 ::: notes
 So the main reason I'm interested in this sort of topic is that we're being asked to manage and integrate more services without a corresponding increase in headcount.
